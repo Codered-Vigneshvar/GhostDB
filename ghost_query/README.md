@@ -4,24 +4,30 @@ GhostQuery is a Meta OpenEnv 2026 RL Benchmark for SQL Optimization. It trains a
 
 ## PROJECT STARTER STRUCTURE
 
-- **`ghost_query/environment/`**: THE WORLD (Teammate's Focus)
-  - `sql_env.py`: Core Logic: Inherits from `openenv.Environment`.
-  - `grader.py`: The Referee: Hashing and Data Integrity.
-  - `engine.py`: DuckDB session & Parquet loading.
-- **`ghost_query/agent/`**: THE BRAIN (Your Focus)
-  - `baseline.py`: The RL Loop: Talks to the FastAPI server.
-  - `researcher.py`: LLM Logic: How the agent "thinks".
-  - `prompts.py`: System instructions for SQL optimization.
-- **`ghost_query/data/`**: THE MATTER (Static Assets)
-  - `sales_data.parquet`: 1M rows of unoptimized data.
-  - `customers.parquet`: Dimension tables.
-- **`ghost_query/tasks/`**: THE QUESTS (Challenge Files)
-  - `task_1_joins.sql`: Specific SQL "traps" for the agent.
-  - `task_2_ctes.sql`.
-- **`ghost_query/models.py`**: THE CONTRACT (Shared Schemas).
-- **`ghost_query/app.py`**: THE GATEWAY (FastAPI Server Entry).
-- **`ghost_query/Dockerfile`**: THE CONTAINER (The "Glass Box").
-- **`ghost_query/pyproject.toml`**: THE MANIFEST (Dependencies).
+```text
+ghost_query/
+├── environment/           # THE WORLD (Teammate's Focus)
+│   ├── __init__.py
+│   ├── sql_env.py        # Core Logic: RL execution and Reward calculation
+│   ├── grader.py         # The Referee: Bit-fidelity validation
+│   └── engine.py         # DuckDB session & Data management
+├── agent/                 # THE BRAIN (Your Focus)
+│   ├── __init__.py
+│   ├── baseline.py       # The RL Loop: Entrypoint for local evaluation
+│   ├── researcher.py     # LLM Logic: SQL reasoning heuristics
+│   └── prompts.py        # System instructions and few-shots
+├── data/                  # THE MATTER (Static Assets)
+│   ├── sales_data.parquet # Evaluation datasets
+│   └── customers.parquet  
+├── tasks/                 # THE QUESTS (Challenge Files)
+│   ├── task_1_joins.sql  # Specific SQL optimization scenarios
+│   └── task_2_ctes.sql
+├── models.py              # THE CONTRACT (Strict Typed Schemas)
+├── app.py                 # THE GATEWAY (FastAPI Server Entrypoint)
+├── Dockerfile             # THE CONTAINER (The "Glass Box")
+├── pyproject.toml         # THE MANIFEST (Dependencies)
+└── README.md              # THE VISION (Research Abstract)
+```
 
 ## EXECUTION
 
