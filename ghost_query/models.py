@@ -4,7 +4,6 @@ from typing import Dict, Any, Optional
 try:
     from pydantic import BaseModel, Field
 except ImportError:
-    # Fallback or dummy class for environments strictly missing pydantic
     class BaseModel:
         pass
     def Field(*args, **kwargs):
@@ -20,7 +19,6 @@ class SQLObservation(BaseModel):
     error_msg: Optional[str] = Field(None, description="Detailed error message if the query failed, otherwise None.")
 
 class SQLState(BaseModel):
-    # State tracking if necessary for full RL tracking over time
     current_latency_ms: Optional[float] = None
     baseline_latency_ms: Optional[float] = None
     step_count: int = 0

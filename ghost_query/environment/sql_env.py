@@ -1,34 +1,26 @@
-import sys
-import os
 import time
 import json
-import duckdb
 from typing import Dict, Any, Tuple
-
 from openenv.core.env_server import Environment
 
-from scripts.seed_data import generate_messy_sales_data
-from models import SQLAction, SQLObservation, SQLState
-from grader import verify_integrity
+from ghost_query.environment.engine import DBEngine
+from ghost_query.environment.grader import verify_integrity
+from ghost_query.models import SQLAction, SQLObservation, SQLState
 
 class SQLEnv(Environment):
     def __init__(self):
         super().__init__()
-        self.conn = None
+        self.engine = None
         self.baseline_latency_ms = None
         self.baseline_query = ""
 
     def reset(self) -> Tuple[SQLObservation, SQLState, Dict[str, Any]]:
-        if self.conn is not None:
-            self.conn.close()
+        if self.engine is not None:
+            self.engine.close()
         
-        # Initialize memory DB
-        self.conn = duckdb.connect(':memory:')
+        self.engine = DBEngine(':memory:')
+        self.engine.seed_data(row_count=100000)
         
-        # Seed 100k row Sales data
-        generate_messy_sales_data(self.conn, row_count=100000)
-        
-        # The unoptimized baseline query (creates deliberate Cartesian inefficiencies / Full scans)
         self.baseline_query = """
         SELECT 
             s1.region_id, 
@@ -55,19 +47,15 @@ class SQLEnv(Environment):
         obs, latency = self._execute_query(action.sql_query)
         
         if obs.error_msg:
-            # Science Standard: Every Penalty MUST include a clear reason in 'info'
             return obs, -1.0, True, False, {"error": "Syntax Error", "reason": obs.error_msg}
             
         try:
-            # Grader Logic: Evaluate bit-fidelity
-            baseline_df = self.conn.execute(self.baseline_query).df()
-            optimized_df = self.conn.execute(action.sql_query).df()
+            baseline_df = self.engine.execute(self.baseline_query).df()
+            optimized_df = self.engine.execute(action.sql_query).df()
             
             is_valid = verify_integrity(baseline_df, optimized_df)
             
             if is_valid:
-                # RL Reward Standard: R = (T_baseline - T_optimized) / T_baseline
-                # Capped or scaled correctly. We make sure not to div-zero.
                 if self.baseline_latency_ms > 0:
                     reward = (self.baseline_latency_ms - obs.latency_ms) / self.baseline_latency_ms
                 else:
@@ -84,19 +72,16 @@ class SQLEnv(Environment):
 
     def _execute_query(self, query: str) -> Tuple[SQLObservation, float]:
         try:
-            # Request JSON formatted query plan
-            # DuckDB PRAGMA explain_output='all' can get detailed, but 'EXPLAIN FORMAT JSON' is standard
-            plan_res = self.conn.execute(f"EXPLAIN FORMAT JSON {query}").fetchone()
+            plan_res = self.engine.execute(f"EXPLAIN FORMAT JSON {query}").fetchone()
             plan_json = str(plan_res[0])
             
-            # Record execution Latency
             start_time = time.time()
-            self.conn.execute(query)
+            self.engine.execute(query)
             latency_ms = (time.time() - start_time) * 1000.0
             
             obs = SQLObservation(
                 latency_ms=latency_ms,
-                bytes_scanned=0, # Extrapolated in a real detailed wrapper
+                bytes_scanned=0,
                 query_plan_json=plan_json,
                 error_msg=None
             )

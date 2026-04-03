@@ -1,35 +1,51 @@
 # GhostQuery
 
-*A Meta OpenEnv 2026 RL Benchmark*
+*A Meta OpenEnv 2026 RL Benchmark for SQL Optimization*
 
-GhostQuery is a FinOps-focused RL environment designed to benchmark agents against highly inefficient SQL queries. Its goal is to train agents to refactor 'Unoptimized' SQL (Full Table Scans, Cartesian Joins) into 'Optimized' SQL (Predicate Pushdown, Column Pruning) using DuckDB as a high-speed simulation engine. 
+GhostQuery is a modular RL environment designed to train agents in sophisticated SQL refactoring. It uses DuckDB for high-speed simulation and enforces 100% bit-fidelity via SHA-256 result set hashing.
 
-Success is measured by the Latency Reduction percentage (`Reward`), but only validated if the resulting dataset maintains **100% bit-fidelity** with the baseline.
+## Project Structure
 
-## Architecture
+```text
+ghost_query/
+├── environment/           # THE WORLD (Environment Logic)
+│   ├── sql_env.py        # Core Logic: RL execution and Reward calculation
+│   ├── grader.py         # The Referee: Bit-fidelity validation
+│   └── engine.py         # DuckDB session & Data management
+│
+├── agent/                 # THE BRAIN (Agent Intelligence)
+│   ├── baseline.py       # The RL Loop: Entrypoint for local evaluation
+│   ├── researcher.py     # LLM Logic: SQL reasoning heuristics
+│   └── prompts.py        # System instructions and few-shots
+│
+├── data/                  # THE MATTER (Static Assets)
+│   ├── sales_data.parquet # Evaluation datasets
+│   └── customers.parquet  
+│
+├── tasks/                 # THE QUESTS (Challenge Files)
+│   ├── task_1_joins.sql  # Specific SQL optimization scenarios
+│   └── task_2_ctes.sql
+│
+├── models.py              # THE CONTRACT (Strict Typed Schemas)
+└── app.py                 # THE GATEWAY (FastAPI Server Entrypoint)
+```
 
-- **`models.py`**: Defines strict typed Pydantic structures for `SQLAction`, `SQLObservation` and `SQLState`. 
-- **`server/sql_env.py`**: Implementation of `openenv.core.env_server.Environment`.
-  - `reset()` populates memory with realistic chaotic data ("Sales").
-  - `step(action)` executes agent actions, compares `EXPLAIN ANALYZE` efficiencies, calculates metrics, and enforces bit-fidelity.
-- **`grader.py`**: Validates agent outcomes by sorting and hashing stringified `pandas.DataFrame` equivalents using SHA-256. 
-- **`baseline.py`**: Contains a zero-shot execution pattern mimicking an AI agent.
+## Getting Started
 
-## Metrics
-- Reward function computes relative efficiency strictly against baseline time.
-- `$R = \frac{T_{baseline} - T_{optimized}}{T_{baseline}}$`
-- Observations feature exact execution plans (`query_plan_json`) empowering LLM and algorithmic reasoning heuristics.
-
-## Execution
-
+### Local Evaluation
+Run the zero-shot baseline loop to verify the environment:
 ```bash
-# Validate local openenv structure
-openenv validate
+python -m ghost_query.agent.baseline
+```
 
-# Run baseline demonstration locally
-python baseline.py
+### Server Deployment
+Launch the environment as a FastAPI microservice:
+```bash
+uvicorn ghost_query.app:app --host 0.0.0.0 --port 8000
+```
 
-# Docker Environment Setup
-docker build -t ghostquery .
-docker run -p 8000:8000 ghostquery
+### Docker
+```bash
+docker build -t ghost_query .
+docker run -p 8000:8000 ghost_query
 ```

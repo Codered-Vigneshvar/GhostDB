@@ -1,5 +1,5 @@
 [project]
-name = "ghostquery"
+name = "ghost_query"
 version = "0.1.0"
 description = "A Meta OpenEnv 2026 RL Benchmark for SQL Optimization"
 readme = "README.md"
