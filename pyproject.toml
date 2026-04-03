@@ -1,0 +1,14 @@
+[project]
+name = "ghostquery"
+version = "0.1.0"
+description = "A Meta OpenEnv 2026 RL Benchmark for SQL Optimization"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "duckdb>=0.9.2",
+    "openenv-core>=1.0.0",
+    "fastapi>=0.104.1",
+    "pydantic>=2.4.2",
+    "uvicorn>=0.23.2",
+    "pandas>=2.1.2"
+]
