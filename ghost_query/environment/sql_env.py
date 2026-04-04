@@ -5,75 +5,123 @@ from openenv.core.env_server import Environment
 
 from ghost_query.environment.engine import DBEngine
 from ghost_query.environment.grader import verify_integrity
+from ghost_query.environment.logger import TrajectoryLogger
 from ghost_query.models import SQLAction, SQLObservation, SQLState
 
 class SQLEnv(Environment):
+    SUPPORTS_CONCURRENT_SESSIONS = False
+
     def __init__(self):
         super().__init__()
         self.engine = None
         self.baseline_latency_ms = None
         self.baseline_query = ""
+        self.current_task_name = ""
+        self._current_state = SQLState()
+        self.baseline_df = None
+        self.steps = 0
+        self.logger = TrajectoryLogger()
+
+    @property
+    def state(self) -> Any:
+        return self._current_state
 
     def reset(self) -> Tuple[SQLObservation, SQLState, Dict[str, Any]]:
+        import os
+        import glob
+        import random
+        
         if self.engine is not None:
             self.engine.close()
         
-        self.engine = DBEngine(':memory:')
-        self.engine.seed_data(row_count=100000)
+        self.engine = DBEngine()
         
-        self.baseline_query = """
-        SELECT 
-            s1.region_id, 
-            COUNT(DISTINCT s1.transaction_id) as total_txns, 
-            SUM(s1.amount) as total_sales
-        FROM Sales s1
-        INNER JOIN Sales s2 ON s1.status = s2.status
-        WHERE s1.status LIKE '%COMPLETED%' OR s1.status LIKE '%completed%'
-        GROUP BY s1.region_id
-        """
+        base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        tasks_dir = os.path.join(base_dir, "tasks")
+        if not os.path.exists(tasks_dir):
+            tasks_dir = os.path.join(os.getcwd(), "ghost_query", "tasks")
+            
+        task_files = glob.glob(os.path.join(tasks_dir, "*.sql"))
+        if not task_files:
+            raise FileNotFoundError(f"No SQL tasks found in {tasks_dir}")
+            
+        task_path = random.choice(task_files)
+        self.current_task_name = os.path.basename(task_path)
         
+        with open(task_path, 'r') as f:
+            self.baseline_query = f.read()
+            
         obs, latency = self._execute_query(self.baseline_query)
         self.baseline_latency_ms = latency
+        self.baseline_df = self.engine.execute(self.baseline_query).df()
+        
+        obs.original_sql = self.baseline_query
+        obs.baseline_latency = self.baseline_latency_ms
+        obs.is_valid = None
         
         state = SQLState(
             current_latency_ms=self.baseline_latency_ms,
             baseline_latency_ms=self.baseline_latency_ms,
             step_count=0
         )
+        self.steps = 0
         
-        return obs, state, {}
+        return obs, state, {"task": self.current_task_name}
 
     def step(self, action: SQLAction) -> Tuple[SQLObservation, float, bool, bool, Dict[str, Any]]:
+        self.steps += 1
+        reward = 0.0
+        is_valid = False
+        terminated = False
+        info = {}
+
         obs, latency = self._execute_query(action.sql_query)
         
         if obs.error_msg:
-            return obs, -1.0, True, False, {"error": "Syntax Error", "reason": obs.error_msg}
-            
-        try:
-            baseline_df = self.engine.execute(self.baseline_query).df()
-            optimized_df = self.engine.execute(action.sql_query).df()
-            
-            is_valid = verify_integrity(baseline_df, optimized_df)
-            
-            if is_valid:
-                if self.baseline_latency_ms > 0:
-                    reward = (self.baseline_latency_ms - obs.latency_ms) / self.baseline_latency_ms
+            obs.is_valid = False
+            reward = -1.0
+            terminated = True
+            info = {"error": "Syntax Error", "reason": obs.error_msg}
+        else:
+            try:
+                baseline_df = self.baseline_df
+                optimized_df = self.engine.execute(action.sql_query).df()
+                
+                is_valid = verify_integrity(baseline_df, optimized_df)
+                obs.is_valid = is_valid
+                
+                if is_valid:
+                    if self.baseline_latency_ms > 0:
+                        reward = (self.baseline_latency_ms - obs.latency_ms) / self.baseline_latency_ms
+                    else:
+                        reward = 0.0
+                    reward -= (self.steps * 0.05)
+                    info = {"status": "Success", "reason": "Optimized with exact bit-fidelity."}
                 else:
-                    reward = 0.0
-                info = {"status": "Success", "reason": "Optimized with exact bit-fidelity."}
-            else:
+                    reward = -1.0
+                    info = {"error": "Data Corruption", "reason": "Hash mismatch on result set."}
+                
+                terminated = True # Internal task termination
+                
+            except Exception as e:
+                obs.is_valid = False
                 reward = -1.0
-                info = {"error": "Data Corruption", "reason": "Hash mistmatch on result set. Invalid optimizations."}
-            
-            return obs, reward, True, False, info
-            
-        except Exception as e:
-            return obs, -1.0, True, False, {"error": "Data Corruption", "reason": f"Execution mismatch: {str(e)}"}
+                terminated = True
+                info = {"error": "Data Corruption", "reason": f"Execution mismatch: {str(e)}"}
+
+        if self.steps >= 5:
+            terminated = True
+
+        self.logger.log_step(self.current_task_name, self.steps, obs, action, reward)
+        return obs, reward, terminated, False, info
 
     def _execute_query(self, query: str) -> Tuple[SQLObservation, float]:
         try:
-            plan_res = self.engine.execute(f"EXPLAIN FORMAT JSON {query}").fetchone()
-            plan_json = str(plan_res[0])
+            # Strip simple SQL comments to prevent EXPLAIN from choking on them
+            clean_query = "\n".join([line for line in query.split("\n") if not line.strip().startswith("--")])
+            
+            plan_res = self.engine.execute(f"EXPLAIN {clean_query}").fetchall()
+            plan_json = str(plan_res)
             
             start_time = time.time()
             self.engine.execute(query)
@@ -81,7 +129,6 @@ class SQLEnv(Environment):
             
             obs = SQLObservation(
                 latency_ms=latency_ms,
-                bytes_scanned=0,
                 query_plan_json=plan_json,
                 error_msg=None
             )
@@ -89,7 +136,6 @@ class SQLEnv(Environment):
         except Exception as e:
             obs = SQLObservation(
                 latency_ms=0.0,
-                bytes_scanned=0,
                 query_plan_json="{}",
                 error_msg=str(e)
             )

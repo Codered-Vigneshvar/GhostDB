@@ -1,5 +1,5 @@
 -- Problem: Heavy Join + Aggregation + String Filtering
--- Goal: Filter sales FIRST, then join only necessary columns
+-- Goal: Filter sales FIRST, then run the join
 SELECT 
     c.segment,
     COUNT(s.sale_id) as total_sales,
