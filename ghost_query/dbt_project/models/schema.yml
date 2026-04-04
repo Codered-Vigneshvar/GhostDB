@@ -1,0 +1,25 @@
+version: 2
+
+models:
+  - name: stg_orders
+    columns:
+      - name: order_id
+        tests:
+          - not_null
+
+  - name: stg_customers
+    columns:
+      - name: customer_id
+        tests:
+          - not_null
+          - unique 
+
+  - name: int_order_line_enriched_bad
+    tests:
+      - dbt_utils.expression_is_true:
+          expression: "quantity >= 0" 
+
+  - name: int_customer_360_bad
+    tests:
+      - dbt_utils.expression_is_true:
+          expression: "gross_sales >= 0"
