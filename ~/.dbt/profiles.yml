@@ -1,0 +1,7 @@
+ghostdb:
+  target: dev
+  outputs:
+    dev:
+      type: duckdb
+      path: ghost_query/data/ghostdb.duckdb
+      threads: 4
