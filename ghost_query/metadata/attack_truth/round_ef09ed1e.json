@@ -1,0 +1,11 @@
+{
+    "attack_type": "duplicate_injection",
+    "target_table": "market_trends",
+    "target_column": "ALL",
+    "description": "Duplicated 10% of rows in market_trends.",
+    "expected_fix": "CREATE OR REPLACE TABLE market_trends AS SELECT DISTINCT * FROM market_trends",
+    "reason": "The sales table has a large number of rows and no null values, making it a potential target for duplicate injection. The lack of anomalies detected in the baseline runtime also suggests that the system may not be equipped to handle duplicate data, which could lead to increased runtime and resource usage.",
+    "expected_impact": "The expected impact of this attack would be an increase in runtime of around 20-30%, causing the system to exceed its expected healthy range. This could lead to slower query performance and potentially cause issues with downstream applications that rely on the data.",
+    "severity": "medium",
+    "round_id": "ef09ed1e"
+}

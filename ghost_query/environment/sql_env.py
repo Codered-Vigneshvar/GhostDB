@@ -27,41 +27,28 @@ class SQLEnv(Environment):
         return self._current_state
 
     def reset(self) -> Tuple[SQLObservation, SQLState, Dict[str, Any]]:
-        import os
-        import glob
-        import random
-        
         if self.engine is not None:
             self.engine.close()
         
         self.engine = DBEngine()
         
-        base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-        tasks_dir = os.path.join(base_dir, "tasks")
-        if not os.path.exists(tasks_dir):
-            tasks_dir = os.path.join(os.getcwd(), "ghost_query", "tasks")
-            
-        task_files = glob.glob(os.path.join(tasks_dir, "*.sql"))
-        if not task_files:
-            raise FileNotFoundError(f"No SQL tasks found in {tasks_dir}")
-            
-        task_path = random.choice(task_files)
-        self.current_task_name = os.path.basename(task_path)
+        self.current_task_name = "default_session"
+        self.baseline_query = ""
+        self.baseline_latency_ms = 0.0
+        self.baseline_df = None
         
-        with open(task_path, 'r') as f:
-            self.baseline_query = f.read()
-            
-        obs, latency = self._execute_query(self.baseline_query)
-        self.baseline_latency_ms = latency
-        self.baseline_df = self.engine.execute(self.baseline_query).df()
-        
-        obs.original_sql = self.baseline_query
-        obs.baseline_latency = self.baseline_latency_ms
+        obs = SQLObservation(
+            latency_ms=0.0,
+            query_plan_json="{}",
+            error_msg=None
+        )
+        obs.original_sql = ""
+        obs.baseline_latency = 0.0
         obs.is_valid = None
         
         state = SQLState(
-            current_latency_ms=self.baseline_latency_ms,
-            baseline_latency_ms=self.baseline_latency_ms,
+            current_latency_ms=0.0,
+            baseline_latency_ms=0.0,
             step_count=0
         )
         self.steps = 0

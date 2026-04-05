@@ -1,0 +1,9 @@
+{
+    "attack_type": "duplicate_injection",
+    "target_table": "market_trends",
+    "target_column": "ALL",
+    "description": "Duplicated 10% of rows within market_trends.",
+    "expected_fix": "CREATE OR REPLACE TABLE market_trends AS SELECT DISTINCT * FROM market_trends or table restore.",
+    "severity": "medium",
+    "round_id": "6aeaed7a"
+}

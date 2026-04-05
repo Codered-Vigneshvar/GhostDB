@@ -10,19 +10,22 @@ class DBEngine:
 
     def _load_all_parquets(self):
         """
-        Dynamically finds all .parquet files in ghost_query/data/ and loads them.
+        Dynamically finds all .parquet files in ghost_query/workspace/data/ and loads them.
         """
         base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-        data_dir = os.path.join(base_dir, "data")
+        data_dir = os.path.join(base_dir, "workspace", "data")
         
         # Fallback if running from a different root
         if not os.path.exists(data_dir):
-            data_dir = os.path.join(os.getcwd(), "ghost_query", "data")
+            data_dir = os.path.join(os.getcwd(), "ghost_query", "workspace", "data")
+            
+        if not os.path.exists(data_dir):
+            return
             
         parquet_files = glob.glob(os.path.join(data_dir, "*.parquet"))
         
         if not parquet_files:
-            print(f"⚠️ No Parquet files found in {data_dir}.")
+            # Workspace is intentionally empty at initialization without reset_manager
             return
             
         for path in parquet_files:

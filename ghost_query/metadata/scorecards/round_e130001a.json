@@ -1,0 +1,9 @@
+{
+    "round_id": "e130001a",
+    "attack_type": "skewed_data",
+    "detected": true,
+    "fixed": false,
+    "efficiency_score": 0.0,
+    "final_score": 0.2,
+    "status": "failed"
+}

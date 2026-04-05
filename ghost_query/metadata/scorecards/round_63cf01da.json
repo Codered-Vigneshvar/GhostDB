@@ -1,0 +1,9 @@
+{
+    "round_id": "63cf01da",
+    "attack_type": "skewed_data",
+    "detected": false,
+    "fixed": false,
+    "efficiency_score": 0.0,
+    "final_score": 0.0,
+    "status": "failed"
+}

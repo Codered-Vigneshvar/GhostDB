@@ -1,0 +1,8 @@
+name: ghostquery-arena
+description: Multi-agent data reliability environment
+entrypoint: ghost_query.api.openenv_app:app
+
+endpoints:
+  reset: POST /reset
+  step: POST /step
+  state: GET /state

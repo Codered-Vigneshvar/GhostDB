@@ -1,0 +1,11 @@
+{
+    "attack_type": "skewed_data",
+    "target_table": "sales",
+    "target_column": "cust_id",
+    "description": "Created heavy data skew on sales.cust_id.",
+    "expected_fix": "Rebalance partitions or filter skewed keys.",
+    "reason": "The sales table has a relatively small number of unique customers compared to the customers table, which could lead to skewed data and performance issues if not properly handled.",
+    "expected_impact": "The query runtime may increase by 10-30% due to the imbalance in data distribution, potentially causing performance issues and delays.",
+    "severity": "medium",
+    "round_id": "0d2c0661"
+}

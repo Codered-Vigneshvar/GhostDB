@@ -2,31 +2,30 @@
 
 GhostQuery is a Meta OpenEnv 2026 RL Benchmark for SQL Optimization. It trains agents to refactor 'Unoptimized' SQL (Full Table Scans, Cartesian Joins) into 'Optimized' SQL (Predicate Pushdown, Column Pruning) using DuckDB as a high-speed simulation engine.
 
-## PROJECT STARTER STRUCTURE
+## MULTI-AGENT ARCHITECTURE
+
+GhostQuery uses an adversarial AI architecture to simulate, test, and optimize SQL:
+- **Attacker Agent**: Injects realistic data problems, schema drifts, and noise.
+- **Defender Agent**: Monitors the environment, diagnoses regressions, and patches SQL.
+- **Evaluator Agent**: Grades the interactions and maintains bit-fidelity validation.
+
+## DIRECTORY STRUCTURE (Baseline vs Workspace)
+
+The system enforces strict state management to prevent corruption:
+- `baseline/`: The immutable ground truth. Contains the snapshot of the dbt project and the original `.parquet` data.
+- `workspace/`: The volatile arena. Agents interact, mutate, and execute inside this folder. The `ResetManager` populates the workspace from the baseline at the start of each round.
 
 ```text
 ghost_query/
-├── environment/           # THE WORLD (Teammate's Focus)
-│   ├── __init__.py
-│   ├── sql_env.py        # Core Logic: RL execution and Reward calculation
-│   ├── grader.py         # The Referee: Bit-fidelity validation
-│   └── engine.py         # DuckDB session & Data management
-├── agent/                 # THE BRAIN (Your Focus)
-│   ├── __init__.py
-│   ├── baseline.py       # The RL Loop: Entrypoint for local evaluation
-│   ├── researcher.py     # LLM Logic: SQL reasoning heuristics
-│   └── prompts.py        # System instructions and few-shots
-├── data/                  # THE MATTER (Static Assets)
-│   ├── sales_data.parquet # Evaluation datasets
-│   └── customers.parquet  
-├── tasks/                 # THE QUESTS (Challenge Files)
-│   ├── task_1_joins.sql  # Specific SQL optimization scenarios
-│   └── task_2_ctes.sql
-├── models.py              # THE CONTRACT (Strict Typed Schemas)
-├── app.py                 # THE GATEWAY (FastAPI Server Entrypoint)
-├── Dockerfile             # THE CONTAINER (The "Glass Box")
-├── pyproject.toml         # THE MANIFEST (Dependencies)
-└── README.md              # THE VISION (Research Abstract)
+├── agent/                 # The Agents (Attacker, Defender, Evaluator)
+├── environment/           # The System Managers (ResetManager, StateStore, Permissions)
+├── baseline/              # Immutable "Ground Truth"
+├── workspace/             # Mutable Execution Arena
+├── reports/               # Match Results and Incident Reports
+├── metadata/              # Round Logs and Attack Proofs
+├── schemas/               # Agent Output JSON Schemas
+├── models.py              # The Contract (Strict Typed Schemas)
+└── data/                  # Generative Scripts
 ```
 
 ## EXECUTION
@@ -40,3 +39,18 @@ Deploy the FastAPI Gateway:
 ```bash
 uvicorn ghost_query.app:app --host 0.0.0.0 --port 8000
 ```
+
+## LLM Configuration
+
+GhostQuery seamlessly switches between an autonomous OpenAI-compatible API and a Groq fallback engine for inference depending on environmental states. 
+
+To govern the LLM, declare the following environment variables (such as in an `.env` file):
+- `MODEL_NAME` (Required): The name of the model to be routed.
+- `HF_TOKEN` (Required): The API key used for authentication. 
+
+**Using an OpenAI-Compatible Interface:**
+If you define `API_BASE_URL` alongside the required keys above, GhostQuery will preferentially use that specific endpoint via standard OpenAI client integration.
+
+**Using Groq Fallback:**
+If `API_BASE_URL` is omitted, the framework automatically instantiates Groq natively under-the-hood using your `HF_TOKEN` authentication.
+

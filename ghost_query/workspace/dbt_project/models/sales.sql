@@ -1,0 +1,1 @@
+CREATE OR REPLACE TABLE sales AS SELECT DISTINCT sale_id, cust_id, amount, sale_time_str FROM sales;

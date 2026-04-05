@@ -1,0 +1,11 @@
+{
+    "attack_type": "skewed_data",
+    "target_table": "sales",
+    "target_column": "cust_id",
+    "description": "Created heavy data skew on sales.cust_id.",
+    "expected_fix": "Rebalance partitions or filter skewed keys.",
+    "reason": "The large number of rows in the customers table makes it a prime target for data skewing, which could lead to inefficient query performance and slowed join operations with other tables.",
+    "expected_impact": "Increased query runtime by 20-30% due to poor data distribution, potentially exceeding the expected healthy range of \u00b110%.",
+    "severity": "medium",
+    "round_id": "de7d9a02"
+}

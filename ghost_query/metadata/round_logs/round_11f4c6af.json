@@ -1,0 +1,10 @@
+{
+    "round_id": "11f4c6af",
+    "success": false,
+    "attempts": 0,
+    "root_cause": "Unknown",
+    "history": [],
+    "runtime_before": 114,
+    "runtime_after": 126,
+    "diff": null
+}

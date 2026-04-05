@@ -1,0 +1,9 @@
+{
+    "round_id": "ef09ed1e",
+    "attack_type": "duplicate_injection",
+    "detected": false,
+    "fixed": false,
+    "efficiency_score": 0.0,
+    "final_score": 0.0,
+    "status": "failed"
+}

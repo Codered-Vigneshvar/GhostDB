@@ -1,0 +1,21 @@
+# Incident Report
+
+## Summary
+**Round ID:** round_53762dbf
+**Status:** Resolved
+
+## Investigation Steps
+- Step 1: Executed `check_nulls` on `sales`
+  -> Clean.
+- Step 2: Executed `check_duplicates` on `market_trends`
+  -> WARNING: Anomaly confirmed via check_duplicates.
+
+## Root Cause (Defender's Inference)
+Detected duplicates anomaly in market_trends.
+
+## Fix Applied
+Executed remove_duplicates on market_trends.
+
+## Validation Result
+- **Passed:** True
+- **Confidence Level:** 0.95

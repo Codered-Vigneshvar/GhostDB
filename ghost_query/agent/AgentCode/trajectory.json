@@ -382,5 +382,17 @@
     },
     "action": "SELECT \n    sale_id, \n    cust_id, \n    amount, \n    sale_time_str \nFROM sales \nWHERE sale_time_str > '2026-04-01 12:00:00' \nORDER BY amount DESC, sale_id ASC \nLIMIT 1000;",
     "reward": 0.4916939344883408
+  },
+  {
+    "task_id": "slow_query_1.sql",
+    "step": 1,
+    "observation": {
+      "original_sql": null,
+      "baseline_latency": null,
+      "latency_ms": 6.941080093383789,
+      "query_plan": "[('physical_plan', \"\u250c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510\\n\u2502           TOP_N           \u2502\\n\u2502    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500   \u2502\\n\u2502         Top: 1000         \u2502\\n\u2502                           \u2502\\n\u2502         Order By:         \u2502\\n\u2502  memory.main.sales.amount \u2502\\n\u2502            DESC           \u2502\\n\u2502 memory.main.sales.sale_id \u2502\\n\u2502             ASC           \u2502\\n\u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518\\n\u250c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510\\n\u2502         PROJECTION        \u2502\\n\u2502    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500   \u2502\\n\u2502          sale_id          \u2502\\n\u2502          cust_id          \u2502\\n\u2502           amount          \u2502\\n\u2502       sale_time_str       \u2502\\n\u2502                           \u2502\\n\u2502       ~200,000 rows       \u2502\\n\u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518\\n\u250c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510\\n\u2502          SEQ_SCAN         \u2502\\n\u2502    \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500   \u2502\\n\u2502           Table:          \u2502\\n\u2502     memory.main.sales     \u2502\\n\u2502                           \u2502\\n\u2502   Type: Sequential Scan   \u2502\\n\u2502                           \u2502\\n\u2502        Projections:       \u2502\\n\u2502       sale_time_str       \u2502\\n\u2502          sale_id          \u2502\\n\u2502          cust_id          \u2502\\n\u2502           amount          \u2502\\n\u2502                           \u2502\\n\u2502          Filters:         \u2502\\n\u2502 sale_time_str>'2026-04-01 \u2502\\n\u2502          12:00:00'        \u2502\\n\u2502                           \u2502\\n\u2502       ~200,000 rows       \u2502\\n\u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518\\n\")]"
+    },
+    "action": "SELECT * FROM sales WHERE sale_time_str > '2026-04-01 12:00:00' ORDER BY amount DESC, sale_id ASC LIMIT 1000;",
+    "reward": 0.3948957022461198
   }
 ]

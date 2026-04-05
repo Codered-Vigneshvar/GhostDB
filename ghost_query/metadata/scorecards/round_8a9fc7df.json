@@ -1,0 +1,9 @@
+{
+    "round_id": "8a9fc7df",
+    "attack_type": "skewed_data",
+    "detected": false,
+    "fixed": true,
+    "efficiency_score": 0.1,
+    "final_score": 0.6,
+    "status": "resolved"
+}
